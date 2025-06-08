@@ -24,14 +24,154 @@
     </style>
 </head>
 <body>
-    <select id="shopFilter">
-        <option value="all">全て</option>
-        <option value="マクドナルド">マクドナルド</option>
-        <option value="モスバーガー">モスバーガー</option>
-        <option value="バーガーキング">バーガーキング</option>
-    </select>
     <div id="map"></div>
 
+    <header style="
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        background: linear-gradient(90deg, #ff7e5f, #feb47b);
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        z-index: 1500;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        padding: 15px 30px;
+        box-sizing: border-box;
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        color: #fff;
+    ">
+        <div style="display: flex; align-items: center;">
+            <img src="./img/hamburger.png" alt="Logo" style="
+                width: 50px; 
+                height: 50px; 
+                margin-right: 15px; 
+                border-radius: 50%; 
+                border: 2px solid #fff; 
+                box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+            ">
+            <h1 style="margin: 0; font-size: 1.8rem; font-weight: bold;">俺のハンバーガーマップ</h1>
+        </div>
+    </header>
+
+
+    <footer style="
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        width: 100%;
+        background: linear-gradient(90deg, #feb47b, #ff7e5f);
+        box-shadow: 0 -4px 6px rgba(0, 0, 0, 0.1);
+        z-index: 1500;
+        display: flex;
+        justify-content: space-around;
+        align-items: center;
+        padding: 10px 0;
+        box-sizing: border-box;
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        color: #fff;
+    ">
+        <button id="filterAll" style="
+            background: #fff;
+            color: #333;
+            border: none;
+            border-radius: 4px;
+            padding: 10px 20px;
+            font-size: 1rem;
+            font-weight: bold;
+            cursor: pointer;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+        ">全て</button>
+        <button id="filterMcd" style="
+            background: #fff;
+            color: #333;
+            border: none;
+            border-radius: 4px;
+            padding: 10px 20px;
+            font-size: 1rem;
+            font-weight: bold;
+            cursor: pointer;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+        ">マクドナルド</button>
+        <button id="filterMos" style="
+            background: #fff;
+            color: #333;
+            border: none;
+            border-radius: 4px;
+            padding: 10px 20px;
+            font-size: 1rem;
+            font-weight: bold;
+            cursor: pointer;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+        ">モスバーガー</button>
+        <button id="filterKing" style="
+            background: #fff;
+            color: #333;
+            border: none;
+            border-radius: 4px;
+            padding: 10px 20px;
+            font-size: 1rem;
+            font-weight: bold;
+            cursor: pointer;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+        ">バーガーキング</button>
+        <button id="filterfresh" style="
+            background: #fff;
+            color: #333;
+            border: none;
+            border-radius: 4px;
+            padding: 10px 20px;
+            font-size: 1rem;
+            font-weight: bold;
+            cursor: pointer;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+        ">フレッシュネスバーガー</button>
+        <button id="filterLotte" style="
+            background: #fff;
+            color: #333;
+            border: none;
+            border-radius: 4px;
+            padding: 10px 20px;
+            font-size: 1rem;
+            font-weight: bold;
+            cursor: pointer;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+        ">ロッテリア</button>
+    </footer>
+
+    <script>
+        document.getElementById("filterAll").addEventListener("click", () => {
+            updateShops("all");
+        });
+        document.getElementById("filterMcd").addEventListener("click", () => {
+            updateShops("マクドナルド");
+        });
+        document.getElementById("filterMos").addEventListener("click", () => {
+            updateShops("モスバーガー");
+        });
+        document.getElementById("filterKing").addEventListener("click", () => {
+            updateShops("バーガーキング");
+        });
+        document.getElementById("filterfresh").addEventListener("click", () => {
+            updateShops("フレッシュネス");
+        });
+        document.getElementById("filterLotte").addEventListener("click", () => {
+            updateShops("ロッテリア");
+        });
+    </script>
+            <div style="display: flex; align-items: center;">
+            <label for="shopFilter" style="margin-right: 10px; font-weight: bold; color: #333;">チェーン別:</label>
+            <select id="shopFilter" style="padding: 5px; border: 1px solid #ccc; border-radius: 4px;">
+                <option value="all">全て</option>
+                <option value="マクドナルド">マクドナルド</option>
+                <option value="モスバーガー">モスバーガー</option>
+                <option value="バーガーキング">バーガーキング</option>
+                <option value="フレッシュネス">フレッシュネスバーガー</option>
+                <option value="ロッテリア">ロッテリア</option>
+            </select>
+        </div>
+    
     <div id="splash-screen" style="
         position: fixed;
         top: 0;
@@ -71,7 +211,9 @@
         const shopSources = [
             { url: "./static/Mcd.json", chain: "マクドナルド" },
             { url: "./static/Mos.json", chain: "モスバーガー" },
-            { url: "./static/King.json", chain: "バーガーキング" }
+            { url: "./static/King.json", chain: "バーガーキング" },
+            { url: "./static/fresh.json", chain: "フレッシュネス" },
+            { url: "./static/lotte.json", chain: "ロッテリア" }
         ];
 
         // カスタムアイコン
@@ -138,6 +280,49 @@
             className: ""
         });
 
+        const freshIcon = L.divIcon({
+            html: `<div style="
+                width:40px;
+                height:40px;
+                border-radius:50%;
+                overflow:hidden;
+                border:2px solid #fff;
+                box-shadow:0 0 4px #888;
+                background:#fff;
+                display:flex;
+                align-items:center;
+                justify-content:center;
+            ">
+                <img src="./img/fresh_icon.jpg" style="width:36px;height:36px;border-radius:50%;object-fit:cover;">
+            </div>`,
+            iconSize: [40, 40],
+            iconAnchor: [20, 40],
+            popupAnchor: [0, -36],
+            className: ""
+        });
+
+        const lotteIcon = L.divIcon({
+            html: `<div style="
+                width:40px;
+                height:40px;
+                border-radius:50%;
+                overflow:hidden;
+                border:2px solid #fff;
+                box-shadow:0 0 4px #888;
+                background:#fff;
+                display:flex;
+                align-items:center;
+                justify-content:center;
+            ">
+                <img src="./img/lotte_icon.jpg" style="width:36px;height:36px;border-radius:50%;object-fit:cover;">
+            </div>`,
+            iconSize: [40, 40],
+            iconAnchor: [20, 40],
+            popupAnchor: [0, -36],
+            className: ""
+        });
+
+
         // マップ作成とショップマーカー管理用のレイヤーグループ変数
         let map, shopLayerGroup;
 
@@ -154,6 +339,11 @@
                         options.icon = mosIcon;
                     } else if (shop.chain === "バーガーキング") {
                         options.icon = bkIcon;
+                    }
+                    else if (shop.chain === "フレッシュネス") {
+                        options.icon = freshIcon;
+                    } else if (shop.chain === "ロッテリア") {
+                        options.icon = lotteIcon;
                     }
                     L.marker([shop.lat, shop.lng], options)
                         .addTo(shopLayerGroup)

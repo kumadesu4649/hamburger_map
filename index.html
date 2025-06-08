@@ -407,7 +407,58 @@
                 }
             });
         }
+        // フッターに検索機能を追加
+        const footer = document.createElement("div");
+        footer.style = `
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            background: rgba(255, 255, 255, 0.9);
+            box-shadow: 0 -2px 4px rgba(0, 0, 0, 0.2);
+            z-index: 1500;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 10px;
+            box-sizing: border-box;
+        `;
+        const searchInput = document.createElement("input");
+        searchInput.type = "text";
+        searchInput.placeholder = "店名で検索";
+        searchInput.style = `
+            padding: 5px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            width: 300px;
+        `;
+        footer.appendChild(searchInput);
+        document.body.appendChild(footer);
 
+        searchInput.addEventListener("input", function () {
+            const query = this.value.trim().toLowerCase();
+            if (!shopLayerGroup) return;
+            shopLayerGroup.clearLayers();
+            shops.forEach(shop => {
+            if (shop.name.toLowerCase().includes(query)) {
+                let options = {};
+                if (shop.chain === "マクドナルド") {
+                options.icon = mcdIcon;
+                } else if (shop.chain === "モスバーガー") {
+                options.icon = mosIcon;
+                } else if (shop.chain === "バーガーキング") {
+                options.icon = bkIcon;
+                } else if (shop.chain === "フレッシュネス") {
+                options.icon = freshIcon;
+                } else if (shop.chain === "ロッテリア") {
+                options.icon = lotteIcon;
+                }
+                L.marker([shop.lat, shop.lng], options)
+                .addTo(shopLayerGroup)
+                .bindPopup(`<strong>${shop.name}</strong><br>${shop.chain}`);
+            }
+            });
+        });
         // セレクトボックスの変更イベント設定
         document.getElementById("shopFilter").addEventListener("change", function() {
             updateShops(this.value);

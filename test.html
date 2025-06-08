@@ -23,6 +23,19 @@
         }
     </style>
 </head>
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        const mapElement = document.getElementById("map");
+        mapElement.addEventListener("contextmenu", function(event) {
+            event.preventDefault();
+            const clickLatLng = map.containerPointToLatLng([
+                event.clientX - mapElement.offsetLeft,
+                event.clientY - mapElement.offsetTop
+            ]);
+            alert(`右クリック - 緯度: ${clickLatLng.lat}, 経度: ${clickLatLng.lng}`);
+        });
+    });
+</script>
 <body>
     <select id="shopFilter">
         <option value="all">全て</option>

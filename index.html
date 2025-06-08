@@ -423,6 +423,12 @@
             padding: 10px;
             box-sizing: border-box;
         `;
+        const searchContainer = document.createElement("div");
+        searchContainer.style = `
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        `;
         const searchInput = document.createElement("input");
         searchInput.type = "text";
         searchInput.placeholder = "店名で検索";
@@ -432,7 +438,15 @@
             border-radius: 4px;
             width: 300px;
         `;
-        footer.appendChild(searchInput);
+        const searchIcon = document.createElement("i");
+        searchIcon.className = "bi bi-search";
+        searchIcon.style = `
+            font-size: 1.2rem;
+            color: #333;
+        `;
+        searchContainer.appendChild(searchIcon);
+        searchContainer.appendChild(searchInput);
+        footer.appendChild(searchContainer);
         document.body.appendChild(footer);
 
         searchInput.addEventListener("input", function () {

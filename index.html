@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <title>バーガーショップマップ</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link 
+        rel="stylesheet" 
+        href="https://unpkg.com/leaflet@1.9.3/dist/leaflet.css"
+    />
+    <style>
+        body, html { margin: 0; padding: 0; }
+        #map { height: 100vh; width: 100vw; }
+        /* セレクトボックスを地図上に固定表示 */
+        #shopFilter {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            z-index: 1000;
+            padding: 5px;
+            background: white;
+            border: 1px solid #ccc;
+        }
+    </style>
+</head>
+<body>
+    <select id="shopFilter">
+        <option value="all">全て</option>
+        <option value="マクドナルド">マクドナルド</option>
+        <option value="モスバーガー">モスバーガー</option>
+        <option value="バーガーキング">バーガーキング</option>
+    </select>
+    <div id="map"></div>
+
+    <script src="https://unpkg.com/leaflet@1.9.3/dist/leaflet.js"></script>
+    <script>
+        // サンプルのバーガーショップデータ（JSON形式）
+        const shops = [
+            { name: "マクドナルド イオンモール柏店", lat: 35.85212851076679, lng: 139.96177828841672, chain: "マクドナルド" },
+            { name: "マクドナルド 南柏駅前店", lat: 35.844043023345506, lng: 139.9540182869381, chain: "マクドナルド" },
+            { name: "マクドナルド 南柏店", lat: 35.847286725973426, lng: 139.9538091737122, chain: "マクドナルド" },
+            { name: "マクドナルド 新柏ヨークフーズ店", lat: 35.843771124399986, lng: 139.98002368940305, chain: "マクドナルド" },
+            { name: "マクドナルド 柏酒井根店", lat: 35.823475349272975, lng: 139.96728974219397, chain: "マクドナルド" },
+            { name: "マクドナルド 柏店", lat: 35.86108661398285, lng: 139.9718631157876, chain: "マクドナルド" },
+            { name: "マクドナルド 柏駅前通り店", lat: 35.8612121098594, lng: 139.97360668767436, chain: "マクドナルド" },
+            { name: "マクドナルド 柏高島屋ステーションモール店", lat: 35.862951259287634, lng: 139.9704681054582, chain: "マクドナルド" },
+            { name: "バーガーキング 柏店", lat: 35.84764371370469, lng: 139.95720364494974, chain: "バーガーキング" },
+            { name: "モスバーガー 原宿", lat: 35.6693, lng: 139.7021, chain: "モスバーガー" },
+
+    ];
+
+    const mcdIcon = L.divIcon({
+        html: `<div style="
+            width:40px;
+            height:40px;
+            border-radius:50%;
+            overflow:hidden;
+            border:2px solid #fff;
+            box-shadow:0 0 4px #888;
+            background:#fff;
+            display:flex;
+            align-items:center;
+            justify-content:center;
+        ">
+            <img src="mcd_icon.png" style="width:36px;height:36px;border-radius:50%;object-fit:cover;">
+        </div>`,
+        iconSize: [40, 40],
+        iconAnchor: [20, 40],
+        popupAnchor: [0, -36],
+        className: ""
+    });
+
+    const mosIcon = L.divIcon({
+        html: `<div style="
+            width:40px;
+            height:40px;
+            border-radius:50%;
+            overflow:hidden;
+            border:2px solid #fff;
+            box-shadow:0 0 4px #888;
+            background:#fff;
+            display:flex;
+            align-items:center;
+            justify-content:center;
+        ">
+            <img src="mos_icon.jpg" style="width:36px;height:36px;border-radius:50%;object-fit:cover;">
+        </div>`,
+        iconSize: [40, 40],
+        iconAnchor: [20, 40],
+        popupAnchor: [0, -36],
+        className: ""
+    });
+
+    const bkIcon = L.divIcon({
+        html: `<div style="
+            width:40px;
+            height:40px;
+            border-radius:50%;
+            overflow:hidden;
+            border:2px solid #fff;
+            box-shadow:0 0 4px #888;
+            background:#fff;
+            display:flex;
+            align-items:center;
+            justify-content:center;
+        ">
+            <img src="king_icon.png" style="width:36px;height:36px;border-radius:50%;object-fit:cover;">
+        </div>`,
+        iconSize: [40, 40],
+        iconAnchor: [20, 40],
+        popupAnchor: [0, -36],
+        className: ""
+    });
+
+    window.addEventListener("load", function() {
+        // updateShops が定義された後に、カスタム処理で上書きする
+        const originalUpdateShops = updateShops;
+        updateShops = function(filter) {
+            shopLayerGroup.clearLayers();
+            shops.forEach(shop => {
+                if (filter === "all" || shop.chain === filter) {
+                    const options = {};
+                    if (shop.chain === "マクドナルド") {
+                        options.icon = mcdIcon;
+                    } else if (shop.chain === "モスバーガー") {
+                        options.icon = mosIcon;
+                    } else if (shop.chain === "バーガーキング") {
+                        options.icon = bkIcon;
+                    }
+                    L.marker([shop.lat, shop.lng], options)
+                        .addTo(shopLayerGroup)
+                        .bindPopup(`<strong>${shop.name}</strong><br>${shop.chain}`);
+                }
+            });
+        };
+    });
+        // マップ作成とショップマーカー管理用のレイヤーグループ変数
+        let map, shopLayerGroup;
+
+        // ショップを更新して表示する関数
+        function updateShops(filter) {
+            shopLayerGroup.clearLayers();
+            shops.forEach(shop => {
+                if (filter === "all" || shop.chain === filter) {
+                    L.marker([shop.lat, shop.lng])
+                        .addTo(shopLayerGroup)
+                        .bindPopup(`<strong>${shop.name}</strong><br>${shop.chain}`);
+                }
+            });
+        }
+
+        // セレクトボックスの変更イベント設定
+        document.getElementById("shopFilter").addEventListener("change", function() {
+            updateShops(this.value);
+        });
+
+        // ユーザーの現在地を取得してマップの初期化
+        function initializeMap(lat, lng, currentLocationText) {
+            map = L.map('map').setView([lat, lng], 14);
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '&copy; OpenStreetMap contributors'
+            }).addTo(map);
+            
+            // 現在地マーカー
+            L.marker([lat, lng])
+                .addTo(map)
+                .bindPopup(currentLocationText)
+                .openPopup();
+            
+            // ショップマーカー用のレイヤーグループ
+            shopLayerGroup = L.layerGroup().addTo(map);
+            updateShops(document.getElementById("shopFilter").value);
+        }
+
+        navigator.geolocation.getCurrentPosition(function(position) {
+            const lat = position.coords.latitude;
+            const lng = position.coords.longitude;
+            initializeMap(lat, lng, "あなたの現在地");
+        }, function(error) {
+            // ジオロケーション取得失敗時：東京を初期位置に設定
+            const lat = 35.84463394318977;
+            const lng = 139.9541698621203;
+            initializeMap(lat, lng, "デフォルト位置：東京");
+        });
+    </script>
+</body>
+</html>

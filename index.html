@@ -409,8 +409,97 @@
             popupAnchor: [0, -36],
             className: ""
         });
-        
+        // ヒートマップレイヤーを追加するためのスクリプトを読み込む
+        const heatmapScript = document.createElement("script");
+        heatmapScript.src = "https://unpkg.com/leaflet.heat/dist/leaflet-heat.js";
+        document.head.appendChild(heatmapScript);
 
+        // ヒートマップレイヤーを作成する関数
+        function createHeatmap() {
+            const heatData = shops.map(shop => [shop.lat, shop.lng, 1]); // [緯度, 経度, 重み]
+            const heatLayer = L.heatLayer(heatData, {
+            radius: 25,
+            blur: 0.5, // ブラーを減らして色を濃く
+            maxZoom: 15,
+            gradient: {
+                0.2: 'darkorange',
+                0.5: 'crimson',
+                0.8: 'darkred',
+                1: 'black'
+            }
+            });
+            return heatLayer;
+        }
+
+        // ヒートマップ表示用のボタンを追加
+        const heatmapButton = document.createElement("button");
+        heatmapButton.textContent = "ヒートマップ表示";
+        heatmapButton.style = `
+            position: fixed;
+            bottom: 50%;
+            right: 15px;
+            background: #fff;
+            color: #333;
+            border: none;
+            border-radius: 50%;
+            width: 65px;
+            height: 65px;
+            font-size: 1rem;
+            font-weight: bold;
+            cursor: pointer;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+            z-index: 1500;
+        `;
+        document.body.appendChild(heatmapButton);
+
+        let heatmapLayer = null;
+
+        heatmapButton.addEventListener("click", () => {
+            if (!map) return;
+            if (heatmapLayer) {
+                map.removeLayer(heatmapLayer);
+                heatmapLayer = null;
+                heatmapButton.textContent = "ヒートマップ表示";
+            } else {
+                heatmapLayer = createHeatmap();
+                heatmapLayer.addTo(map);
+                heatmapButton.textContent = "ヒートマップ非表示";
+            }
+        });
+        // 店舗非表示ボタンを追加
+        const hideShopsButton = document.createElement("button");
+        hideShopsButton.textContent = "店舗非表示";
+        hideShopsButton.style = `
+            position: fixed;
+            bottom: 40%;
+            right: 15px;
+            background: #fff;
+            color: #333;
+            border: none;
+            border-radius: 50%;
+            width: 65px;
+            height: 65px;
+            font-size: 0.9rem;
+            font-weight: bold;
+            cursor: pointer;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+            z-index: 1500;
+        `;
+        document.body.appendChild(hideShopsButton);
+
+        let areShopsVisible = true;
+
+        hideShopsButton.addEventListener("click", () => {
+            if (!shopLayerGroup) return;
+            if (areShopsVisible) {
+                shopLayerGroup.clearLayers();
+                hideShopsButton.textContent = "店舗表示";
+            } else {
+                updateShops(document.getElementById("shopFilter").value);
+                hideShopsButton.textContent = "店舗非表示";
+            }
+            areShopsVisible = !areShopsVisible;
+        });
 
         // マップ作成とショップマーカー管理用のレイヤーグループ変数
         let map, shopLayerGroup;

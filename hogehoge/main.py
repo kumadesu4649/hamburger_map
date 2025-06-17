@@ -9,7 +9,7 @@ query = """
 [out:json][timeout:25];
 area["ISO3166-2"="JP-13"]->.searchArea;
 (
-  node["amenity"="fast_food"]["name"~"モスバーガー"](area.searchArea);
+  node["amenity"="fast_food"]["name"~"フレッシュネス"](area.searchArea);
 );
 out body;
 """
@@ -28,7 +28,7 @@ for el in data['elements']:
         "name": name,
         "lat": lat,
         "lng": lng,
-        "chain": "モスバーガー",
+        "chain": "フレッシュネス",
     })
 
 # 結果を表示

@@ -7,9 +7,9 @@ overpass_url = "https://overpass.kumi.systems/api/interpreter"
 # クエリ（千葉県JP-12内のモスバーガー取得）
 query = """
 [out:json][timeout:25];
-area["ISO3166-2"="JP-12"]->.searchArea;
+area["ISO3166-2"="JP-13"]->.searchArea;
 (
-  node["amenity"="fast_food"]["name"~"ロッテリア"](area.searchArea);
+  node["amenity"="fast_food"]["name"~"モスバーガー"](area.searchArea);
 );
 out body;
 """
@@ -28,7 +28,7 @@ for el in data['elements']:
         "name": name,
         "lat": lat,
         "lng": lng,
-        "chain": "ロッテリア",
+        "chain": "モスバーガー",
     })
 
 # 結果を表示
@@ -36,6 +36,6 @@ print(f"取得件数: {len(results)} 件")
 print(json.dumps(results, ensure_ascii=False, indent=2))
 
 # 保存
-with open('chiba_lotte_burger_osm.json', 'w', encoding='utf-8') as f:
+with open('chiba_mcd_burger_osm.json', 'w', encoding='utf-8') as f:
     json.dump(results, f, ensure_ascii=False, indent=2)
     print("出力が完了しました")

@@ -4,12 +4,14 @@ import json
 # より安定しているOverpass APIミラー
 overpass_url = "https://overpass.kumi.systems/api/interpreter"
 
+shop = "ファミリーマート"
+
 # クエリ（千葉県JP-12内のモスバーガー取得）
-query = """
+query = f"""
 [out:json][timeout:25];
-area["ISO3166-2"="JP-13"]->.searchArea;
+area["ISO3166-2"="JP-07"]->.searchArea;
 (
-  node["amenity"="fast_food"]["name"~"フレッシュネス"](area.searchArea);
+  node["amenity"="fast_food"]["name"~"{shop}"](area.searchArea);
 );
 out body;
 """
@@ -28,7 +30,7 @@ for el in data['elements']:
         "name": name,
         "lat": lat,
         "lng": lng,
-        "chain": "フレッシュネス",
+        "chain": shop,
     })
 
 # 結果を表示

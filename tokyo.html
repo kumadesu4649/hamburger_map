@@ -339,7 +339,7 @@
                 align-items:center;
                 justify-content:center;
             ">
-                <img src="./img/mos_icon.jpg" style="width:36px;height:36px;border-radius:50%;object-fit:cover;">
+                <img src="./img/mos_icon.png" style="width:36px;height:36px;border-radius:50%;object-fit:cover;">
             </div>`,
             iconSize: [40, 40],
             iconAnchor: [20, 40],
@@ -524,11 +524,20 @@
                         options.icon = lotteIcon;
                     }
                     L.marker([shop.lat, shop.lng], options)
-                        .addTo(shopLayerGroup)
-                        .bindPopup(`<strong>${shop.name}</strong><br>${shop.chain}`);
-                }
-            });
-        }
+                    .addTo(shopLayerGroup)
+                    .bindPopup(`<strong>${shop.name}</strong><br>${shop.chain}`)
+                    .on("click", function () {
+                        const currentZoom = map.getZoom();
+                        if (currentZoom === 17) {
+                            map.flyTo([shop.lat, shop.lng], 14, { duration: 1.5 }); // ズームアウト
+                        } else {
+                            map.flyTo([shop.lat, shop.lng], 17, { duration: 1.5 }); // ズームイン
+                        }
+                    });
+                    }
+                });
+            }
+        
         // フッターに検索機能を追加
         const footer = document.createElement("div");
         footer.style = `
@@ -591,10 +600,40 @@
                 }
                 L.marker([shop.lat, shop.lng], options)
                 .addTo(shopLayerGroup)
-                .bindPopup(`<strong>${shop.name}</strong><br>${shop.chain}`);
-            }
-            });
-        });
+                .bindPopup(`
+                    <div style="position:relative;">
+                        <button id="close-zoomout-btn" style="
+                            position:absolute;
+                            top:2px;right:2px;
+                            background:transparent;
+                            border:none;
+                            font-size:1.2rem;
+                            cursor:pointer;
+                            color:#888;
+                        ">&times;</button>
+                        <strong>${shop.name}</strong><br>${shop.chain}
+                    </div>
+                `)
+                .on("click", function () {
+                    const currentZoom = map.getZoom();
+                    if (currentZoom === 17) {
+                        map.flyTo([shop.lat, shop.lng], 14, { duration: 1.5 }); // ズームアウト
+                    } else {
+                        map.flyTo([shop.lat, shop.lng], 17, { duration: 1.5 }); // ズームイン
+                    }
+                })
+                .on("popupopen", function (e) {
+                    const btn = document.getElementById("close-zoomout-btn");
+                    if (btn) {
+                        btn.onclick = function () {
+                            map.closePopup();
+                            map.flyTo(e.popup.getLatLng(), 14, { duration: 1.5 }); // ズームアウト
+                        };
+                    }
+                });
+                    }
+                    });
+                });
         // セレクトボックスの変更イベント設定
         document.getElementById("shopFilter").addEventListener("change", function() {
             updateShops(this.value);
@@ -624,8 +663,10 @@
         // ユーザーの現在地を取得してマップの初期化
         function initializeMap(lat, lng, currentLocationText) {
             map = L.map('map').setView([lat, lng], 30);
-            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                attribution: '&copy; OpenStreetMap contributors'
+            L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
+            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors & CartoDB',
+            subdomains: 'abcd',
+            maxZoom: 19
             }).addTo(map);
 
             // 現在地マーカー

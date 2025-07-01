@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>インタラクティブマップ</title>
+    <script src='https://unpkg.com/maplibre-gl@2.4.0/dist/maplibre-gl.js'></script>
+    <link href='https://unpkg.com/maplibre-gl@2.4.0/dist/maplibre-gl.css' rel='stylesheet' />
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: Arial, sans-serif;
+        }
+        #map {
+            height: 100vh;
+            width: 100%;
+        }
+        .info-panel {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: rgba(255, 255, 255, 0.9);
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.3);
+            max-width: 300px;
+            z-index: 1000;
+        }
+        .keyboard-help {
+            margin-top: 10px;
+            font-size: 12px;
+            color: #666;
+        }
+        .location-list {
+            margin-top: 10px;
+            font-size: 12px;
+        }
+        .maplibregl-popup-content {
+            padding: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div id="map"></div>
+    <div class="info-panel">
+        <h3>インタラクティブマップ</h3>
+        <p>マーカーをクリックすると、その場所にズームします。</p>
+        <div class="keyboard-help">
+            <strong>キーボード操作:</strong><br>
+            ↑↓←→: マップ移動<br>
+            +/-: ズーム<br>
+            R: 初期位置に戻る<br>
+            1-6: 各地点に移動
+        </div>
+        <div class="location-list">
+            <strong>地点一覧:</strong><br>
+            1: 東京駅<br>
+            2: 新宿駅<br>
+            3: 渋谷駅<br>
+            4: 浅草寺<br>
+            5: 東京スカイツリー<br>
+            6: 皇居
+        </div>
+    </div>
+    <script></script>
+    <script>
+        // マップを初期化
+        const map = new maplibregl.Map({
+            container: 'map',
+            style: {
+                version: 8,
+                sources: {
+                    'esri-world-imagery': {
+                        type: "raster",
+                        tiles: [
+                            "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}"
+                        ],
+                        tileSize: 256,
+                        attribution: "Tiles &copy; <a href=\"https://www.esri.com/\">Esri</a> — Source: Esri, Earthstar Geographics",
+                        maxzoom: 19
+                    }
+                },
+                layers: [
+                    {
+                        id: "esri-world-imagery-layer",
+                        type: "raster",
+                        source: "esri-world-imagery"
+                    }
+                ]
+            },
+            center: [140.123, 35.605],
+            zoom: 10
+        });
+
+        const initialView = [140.123, 35.605];
+        const initialZoom = 10;
+
+        // 地点データ
+        const locations = [
+            { name: "福島WatchCompany", lat: 37.562940, lng:  140.995399 },
+            { name: "竜田駅", lat: 37.282425, lng: 141.002675 },
+            { name: "いわき駅", lat: 37.058292, lng: 140.892131 },
+            { name: "東京", lat: 35.680694, lng: 139.767304 },
+            { name: "東京スカイツリー", lat: 35.7101, lng: 139.8107 },
+            { name: "皇居", lat: 35.6852, lng: 139.7528 }
+        ];
+
+        // マップロード完了後にマーカーを追加
+        map.on('load', function() {
+            // 地点データをGeoJSONソースとして追加
+            map.addSource('locations', {
+                'type': 'geojson',
+                'data': {
+                    'type': 'FeatureCollection',
+                    'features': locations.map(location => ({
+                        'type': 'Feature',
+                        'geometry': {
+                            'type': 'Point',
+                            'coordinates': [location.lng, location.lat]
+                        },
+                        'properties': {
+                            'name': location.name
+                        }
+                    }))
+                }
+            });
+
+            // マーカーレイヤーを追加
+            map.addLayer({
+                'id': 'location-markers',
+                'type': 'circle',
+                'source': 'locations',
+                'paint': {
+                    'circle-radius': 8,
+                    'circle-color': '#ff4444',
+                    'circle-stroke-color': '#ffffff',
+                    'circle-stroke-width': 2
+                }
+            });
+
+            // マーカークリック時の処理
+            map.on('click', 'location-markers', function(e) {
+                const coordinates = e.features[0].geometry.coordinates.slice();
+                const name = e.features[0].properties.name;
+
+                // ポップアップを表示
+                new maplibregl.Popup()
+                    .setLngLat(coordinates)
+                    .setHTML(`<b>${name}</b>`)
+                    .addTo(map);
+
+                // ズームアニメーション
+                map.flyTo({
+                    center: coordinates,
+                    zoom: 16,
+                    duration: 1500
+                });
+            });
+
+            // カーソルを変更
+            map.on('mouseenter', 'location-markers', function() {
+                map.getCanvas().style.cursor = 'pointer';
+            });
+
+            map.on('mouseleave', 'location-markers', function() {
+                map.getCanvas().style.cursor = '';
+            });
+        });
+
+        // マップクリック時の処理（マーカー以外の場所）
+        map.on('click', function(e) {
+            const clickedOnMarker = map.queryRenderedFeatures(e.point, {
+                layers: ['location-markers']
+            });
+
+            if (clickedOnMarker.length === 0) {
+                const lngLat = e.lngLat;
+                
+                // 新しいマーカーを追加
+                new maplibregl.Marker()
+                    .setLngLat([lngLat.lng, lngLat.lat])
+                    .setPopup(new maplibregl.Popup().setHTML(
+                        `<b>新しい地点</b><br>緯度: ${lngLat.lat.toFixed(4)}<br>経度: ${lngLat.lng.toFixed(4)}`
+                    ))
+                    .addTo(map);
+
+                // ズームアニメーション
+                map.flyTo({
+                    center: [lngLat.lng, lngLat.lat],
+                    zoom: 15,
+                    duration: 1200
+                });
+            }
+        });
+
+        // キーボード操作
+        document.addEventListener('keydown', function(e) {
+            const center = map.getCenter();
+            const zoom = map.getZoom();
+            const moveDistance = 0.01; // 移動距離
+
+            switch(e.key) {
+                case 'ArrowUp':
+                    e.preventDefault();
+                    map.easeTo({
+                        center: [center.lng, center.lat + moveDistance],
+                        duration: 700
+                    });
+                    break;
+                case 'ArrowDown':
+                    e.preventDefault();
+                    map.easeTo({
+                        center: [center.lng, center.lat - moveDistance],
+                        duration: 700
+                    });
+                    break;
+                case 'ArrowLeft':
+                    e.preventDefault();
+                    map.easeTo({
+                        center: [center.lng - moveDistance, center.lat],
+                        duration: 700
+                    });
+                    break;
+                case 'ArrowRight':
+                    e.preventDefault();
+                    map.easeTo({
+                        center: [center.lng + moveDistance, center.lat],
+                        duration: 700
+                    });
+                    break;
+                case '+':
+                case '=':
+                    e.preventDefault();
+                    map.easeTo({
+                        zoom: zoom + 1,
+                        duration: 800
+                    });
+                    break;
+                case '-':
+                    e.preventDefault();
+                    map.easeTo({
+                        zoom: zoom - 1,
+                        duration: 800
+                    });
+                    break;
+                case 'r':
+                case 'R':
+                    e.preventDefault();
+                    map.flyTo({
+                        center: initialView,
+                        zoom: initialZoom,
+                        duration: 1500
+                    });
+                    break;
+                case '1':
+                case '2':
+                case '3':
+                case '4':
+                case '5':
+                case '6':
+                    e.preventDefault();
+                    const locationIndex = parseInt(e.key) - 1;
+                    if (locations[locationIndex]) {
+                        const location = locations[locationIndex];
+                        map.flyTo({
+                            center: [location.lng, location.lat],
+                            zoom: 17,
+                            duration: 80000,
+                        });
+                    }
+                    break;
+            }
+        });
+
+        // マップにフォーカスを設定してキーボード操作を有効にする
+        map.getContainer().setAttribute('tabindex', '0');
+        map.getContainer().focus();
+    </script>
+</body>
+</html>
